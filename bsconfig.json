@@ -1,11 +1,11 @@
 {
   "name": "reason-scripts",
   "sources": [{ "dir": "src", "subdirs": ["views"] }],
-  "bs-dependencies": ["reason-react", "@glennsl/bs-jest"],
+  "bs-dependencies": ["reason-react", "bs-fetch", "@glennsl/bs-jest"],
   "reason": {
     "react-jsx": 2
   },
-  "bsc-flags": ["-bs-super-errors"],
+  "bsc-flags": ["-bs-no-version-header", "-bs-super-errors"],
   "refmt": 3,
   "package-specs": {
     "module": "es6",
