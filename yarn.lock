@@ -1297,6 +1297,10 @@ bs-fetch@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/bs-fetch/-/bs-fetch-0.2.1.tgz#165bed867009f2e91efb959ca1c0ff940d8cd19a"
 
+bs-json@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/bs-json/-/bs-json-1.0.1.tgz#0e25ed5ba7164ab131e494669b755da9844cc37e"
+
 bs-loader@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/bs-loader/-/bs-loader-2.0.3.tgz#533e9394c740199190e669adc9b1463f80e55ef9"
