@@ -17,6 +17,8 @@ let clickHandler = (href, event) =>
     ReasonReact.Router.push(href);
   };
 
+let loadToken = () => Dom.Storage.(getItem("token", localStorage));
+
 let make = _children => {
   ...component,
   initialState: () => {
@@ -44,7 +46,15 @@ let make = _children => {
       ReasonReact.Router.unwatchUrl
     )
   ],
-  didMount: _self => ReasonReact.Router.push(""),
+  didMount: _self =>
+    switch (loadToken()) {
+    | Some(token) =>
+      switch token {
+      | "" => ReasonReact.Router.push("/login")
+      | _ => ReasonReact.Router.push("")
+      }
+    | _ => ReasonReact.Router.push("/login")
+    },
   render: self =>
     <div className="App">
       (
