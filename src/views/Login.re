@@ -34,20 +34,6 @@ type actions =
 
 let component = ReasonReact.reducerComponent("Login");
 
-let fieldValue = event => ReactDOMRe.domElementToObj(
-                            ReactEventRe.Form.target(event)
-                          )##value;
-
-let loginHandler = (event, self) => {
-  if (! ReactEventRe.Form.isDefaultPrevented(event)) {
-    ReactEventRe.Form.preventDefault(event);
-  };
-  let email = self.ReasonReact.state.email;
-  let password = self.ReasonReact.state.password;
-  self.send(Login(email, password));
-  ();
-};
-
 let login = payload =>
   Fetch.fetchWithInit(
     "http://localhost:4000/api/login",
@@ -62,6 +48,19 @@ let login = payload =>
       ()
     )
   );
+
+let fieldValue = event => ReactDOMRe.domElementToObj(
+                            ReactEventRe.Form.target(event)
+                          )##value;
+
+let loginHandler = (event, self) => {
+  if (! ReactEventRe.Form.isDefaultPrevented(event)) {
+    ReactEventRe.Form.preventDefault(event);
+  };
+  let email = self.ReasonReact.state.email;
+  let password = self.ReasonReact.state.password;
+  self.send(Login(email, password));
+};
 
 let make = _children => {
   ...component,
@@ -94,7 +93,7 @@ let make = _children => {
             Js.Promise.(
               login(payload)
               |> then_(Fetch.Response.json)
-              |> then_(resp => Js.Promise.resolve(Decode.response(resp)))
+              |> then_(resp => resp |> Decode.response |> Js.Promise.resolve)
               |> then_(resp =>
                    switch resp.success {
                    | true => resolve(self.send(LoginSuccessful(resp.token)))

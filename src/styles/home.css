@@ -1,0 +1,10 @@
+.shops-wrapper {
+  width: 80%;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 50px auto;
+}
+
+.shop-wrapper {
+  padding: 20px;
+}
