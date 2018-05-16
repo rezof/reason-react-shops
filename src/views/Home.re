@@ -1,10 +1,6 @@
 [%bs.raw "require('../styles/home.css')"];
 
-type shop = {
-  id: string,
-  name: string,
-  picture: string
-};
+open Types;
 
 type shops = {
   near: list(shop),
@@ -54,14 +50,15 @@ type state =
   | LOCATION_LOADED(float, float)
   | LOCATION_FAILED
   | LOADING_SHOPS
-  | LOADED(list(shop))
-  | FAILED;
+  | LOADING_SHOPS_FAILED
+  | LOADED(list(shop));
 
 type actions =
   | LOADING_LOCATION
   | LOCATION_LOADED(float, float)
   | LOCATION_FAILED
   | LOADING_SHOPS
+  | LOADING_SHOPS_FAILED
   | SHOPS_LOADED(shops);
 
 let component = ReasonReact.reducerComponent("Home");
@@ -108,6 +105,7 @@ let make = _children => {
                  })
               |> catch(err => {
                    Js.log(("error", err));
+                   self.send(LOADING_SHOPS_FAILED);
                    reject(Js.Exn.raiseError("failed to load shops"));
                  })
               |> ignore
@@ -115,6 +113,7 @@ let make = _children => {
         )
       )
     | SHOPS_LOADED(shops) => ReasonReact.Update(SHOPS_LOADED(shops))
+    | LOADING_SHOPS_FAILED => ReasonReact.Update(LOADING_SHOPS_FAILED)
     | _ => ReasonReact.NoUpdate
     },
   didMount: self => {
@@ -142,20 +141,9 @@ let make = _children => {
       <p> (ReasonReact.string("getting your location")) </p>
     | LOADING_SHOPS => <p> (ReasonReact.string("loading shops")) </p>
     | SHOPS_LOADED(shops) =>
-      <div className="shops-wrapper">
-        (
-          shops.near
-          |> Array.of_list
-          |> Array.map(shop =>
-               <div key=shop.id className="shop-wrapper">
-                 <p> (ReasonReact.string(shop.name)) </p>
-                 <img src=shop.picture />
-               </div>
-             )
-          |> ReasonReact.array
-        )
-      </div>
+      <div className="shops-wrapper"> <ShopsList data=shops.near /> </div>
+    | LOADING_SHOPS_FAILED =>
+      <div> (ReasonReact.string("failed to load shops")) </div>
     | _ => <div> (ReasonReact.string("else")) </div>
     }
 };
-/*  */
