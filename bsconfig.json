@@ -3,7 +3,7 @@
   "sources": [
     {
       "dir": "src",
-      "subdirs": [{ "dir": "views", "subdirs": ["components"] }, "externals"]
+      "subdirs": true
     }
   ],
   "bs-dependencies": [
