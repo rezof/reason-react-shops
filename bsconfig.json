@@ -1,6 +1,11 @@
 {
   "name": "reason-scripts",
-  "sources": [{ "dir": "src", "subdirs": ["views", "externals"] }],
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": [{ "dir": "views", "subdirs": ["components"] }, "externals"]
+    }
+  ],
   "bs-dependencies": [
     "reason-react",
     "bs-fetch",
