@@ -71,6 +71,22 @@ let getToken = () => {
   };
 };
 
+let fetch_shops = (~longitude, ~latitude) =>
+  Fetch.fetchWithInit(
+    "http://localhost:4000/api/shops?lantitude="
+    ++ string_of_float(latitude)
+    ++ "&longitude="
+    ++ string_of_float(longitude),
+    Fetch.RequestInit.make(
+      ~headers=
+        Fetch.HeadersInit.make({
+          "Accept": "application/json",
+          "Authorization": getToken()
+        }),
+      ()
+    )
+  );
+
 let make = _children => {
   ...component,
   initialState: () => LOADING_LOCATION,
@@ -83,20 +99,7 @@ let make = _children => {
         (
           self =>
             Js.Promise.(
-              Fetch.fetchWithInit(
-                "http://localhost:4000/api/shops?lantitude="
-                ++ string_of_float(latitude)
-                ++ "&longitude="
-                ++ string_of_float(longitude),
-                Fetch.RequestInit.make(
-                  ~headers=
-                    Fetch.HeadersInit.make({
-                      "Accept": "application/json",
-                      "Authorization": getToken()
-                    }),
-                  ()
-                )
-              )
+              fetch_shops(~latitude, ~longitude)
               |> then_(Fetch.Response.json)
               |> then_(json => json |> Decode.shops |> resolve)
               |> then_(resp => {
