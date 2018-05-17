@@ -3,3 +3,8 @@ type shop = {
   name: string,
   picture: string
 };
+
+type tab = {
+  id: string,
+  text: string
+};
