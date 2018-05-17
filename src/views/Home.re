@@ -1,4 +1,4 @@
-[%bs.raw "require('../styles/home.css')"];
+[%bs.raw "require('../styles/home.css')" ];
 
 open Types;
 
@@ -45,13 +45,15 @@ module Decode = {
     };
 };
 
-type state =
+type data_state =
   | LOADING_LOCATION
   | LOCATION_LOADED(float, float)
   | LOCATION_FAILED
   | LOADING_SHOPS
   | LOADING_SHOPS_FAILED
-  | LOADED(list(shop));
+  | SHOPS_LOADED(list(shop));
+
+type state = data_state;
 
 type actions =
   | LOADING_LOCATION
@@ -138,15 +140,27 @@ let make = _children => {
       ~error=error => Js.log(("error", error))
     );
   },
-  render: self =>
-    switch self.state {
-    | LOADING_LOCATION =>
-      <p> (ReasonReact.string("getting your location")) </p>
-    | LOADING_SHOPS => <p> (ReasonReact.string("loading shops")) </p>
-    | SHOPS_LOADED(shops) =>
-      <div className="shops-wrapper"> <ShopsList data=shops.near /> </div>
-    | LOADING_SHOPS_FAILED =>
-      <div> (ReasonReact.string("failed to load shops")) </div>
-    | _ => <div> (ReasonReact.string("else")) </div>
-    }
+  render: self => {
+    <div className="content-wrapper">
+    <Header
+      selectedTab="near"
+      tabs=[
+        {id: "near", text: "Near By Shops"},
+        {id: "preferred", text: "My Preferred Shops"}
+      ]
+    />
+    (
+      switch self.state {
+      | LOADING_LOCATION =>
+        <p> (ReasonReact.string("getting your location")) </p>
+      | LOADING_SHOPS => <p> (ReasonReact.string("loading shops")) </p>
+      | SHOPS_LOADED(shops) =>
+        <div className="shops-wrapper"> <ShopsList data=shops.near /> </div>
+      | LOADING_SHOPS_FAILED =>
+        <div> (ReasonReact.string("failed to load shops")) </div>
+      | _ => <div> (ReasonReact.string("else")) </div>
+      }
+    )
+  </div>
+  }
 };
