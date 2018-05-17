@@ -1,8 +1,8 @@
 .shops-wrapper {
-  width: 80%;
+  width: 90%;
   display: flex;
   flex-wrap: wrap;
-  margin: 50px auto;
+  margin: 0 auto;
 }
 
 .shop-wrapper {
