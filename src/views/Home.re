@@ -1,4 +1,4 @@
-[%bs.raw "require('../styles/home.css')" ];
+[%bs.raw "require('../styles/home.css')"];
 
 open Types;
 
@@ -9,7 +9,7 @@ type shops = {
 
 type resp = {shops};
 
-module Decode = {
+module Decoder = {
   let shops = json : resp =>
     Json.Decode.{
       shops:
@@ -45,23 +45,29 @@ module Decode = {
     };
 };
 
-type data_state =
-  | LOADING_LOCATION
-  | LOCATION_LOADED(float, float)
-  | LOCATION_FAILED
-  | LOADING_SHOPS
-  | LOADING_SHOPS_FAILED
-  | SHOPS_LOADED(list(shop));
-
-type state = data_state;
-
-type actions =
+type data =
   | LOADING_LOCATION
   | LOCATION_LOADED(float, float)
   | LOCATION_FAILED
   | LOADING_SHOPS
   | LOADING_SHOPS_FAILED
   | SHOPS_LOADED(shops);
+
+type selected_tab = string;
+
+type state = {
+  selected_tab,
+  data
+};
+
+type action =
+  | AC_LOADING_LOCATION
+  | AC_LOCATION_LOADED(float, float)
+  | AC_LOCATION_FAILED
+  | AC_LOADING_SHOPS
+  | AC_LOADING_SHOPS_FAILED
+  | AC_SHOPS_LOADED(shops)
+  | AC_CHANGE_SELECTED_TAB(string);
 
 let component = ReasonReact.reducerComponent("Home");
 
@@ -91,34 +97,38 @@ let fetch_shops = (~longitude, ~latitude) =>
 
 let make = _children => {
   ...component,
-  initialState: () => LOADING_LOCATION,
-  reducer: (action, _state) =>
+  initialState: () => {data: LOADING_LOCATION, selected_tab: "near"},
+  reducer: (action, state) =>
     switch action {
-    | LOADING_SHOPS => ReasonReact.Update(LOADING_SHOPS)
-    | LOCATION_LOADED(latitude, longitude) =>
+    | AC_LOADING_SHOPS => ReasonReact.Update({...state, data: LOADING_SHOPS})
+    | AC_LOCATION_LOADED(latitude, longitude) =>
       ReasonReact.UpdateWithSideEffects(
-        LOADING_SHOPS,
+        {...state, data: LOADING_SHOPS},
         (
           self =>
             Js.Promise.(
               fetch_shops(~latitude, ~longitude)
               |> then_(Fetch.Response.json)
-              |> then_(json => json |> Decode.shops |> resolve)
+              |> then_(json => json |> Decoder.shops |> resolve)
               |> then_(resp => {
-                   self.send(SHOPS_LOADED(resp.shops));
+                   self.send(AC_SHOPS_LOADED(resp.shops));
                    resolve(resp.shops);
                  })
               |> catch(err => {
                    Js.log(("error", err));
-                   self.send(LOADING_SHOPS_FAILED);
+                   self.send(AC_LOADING_SHOPS_FAILED);
                    reject(Js.Exn.raiseError("failed to load shops"));
                  })
               |> ignore
             )
         )
       )
-    | SHOPS_LOADED(shops) => ReasonReact.Update(SHOPS_LOADED(shops))
-    | LOADING_SHOPS_FAILED => ReasonReact.Update(LOADING_SHOPS_FAILED)
+    | AC_SHOPS_LOADED(shops) =>
+      ReasonReact.Update({...state, data: SHOPS_LOADED(shops)})
+    | AC_LOADING_SHOPS_FAILED =>
+      ReasonReact.Update({...state, data: LOADING_SHOPS_FAILED})
+    | AC_CHANGE_SELECTED_TAB(selected_tab) =>
+      ReasonReact.Update({...state, selected_tab})
     | _ => ReasonReact.NoUpdate
     },
   didMount: self => {
@@ -132,7 +142,7 @@ let make = _children => {
       ~success=
         position =>
           self.send(
-            LOCATION_LOADED(
+            AC_LOCATION_LOADED(
               position##coords##latitude,
               position##coords##longitude
             )
@@ -140,27 +150,39 @@ let make = _children => {
       ~error=error => Js.log(("error", error))
     );
   },
-  render: self => {
+  render: self =>
     <div className="content-wrapper">
-    <Header
-      selectedTab="near"
-      tabs=[
-        {id: "near", text: "Near By Shops"},
-        {id: "preferred", text: "My Preferred Shops"}
-      ]
-    />
-    (
-      switch self.state {
-      | LOADING_LOCATION =>
-        <p> (ReasonReact.string("getting your location")) </p>
-      | LOADING_SHOPS => <p> (ReasonReact.string("loading shops")) </p>
-      | SHOPS_LOADED(shops) =>
-        <div className="shops-wrapper"> <ShopsList data=shops.near /> </div>
-      | LOADING_SHOPS_FAILED =>
-        <div> (ReasonReact.string("failed to load shops")) </div>
-      | _ => <div> (ReasonReact.string("else")) </div>
-      }
-    )
-  </div>
-  }
+      <Header
+        changeSelectedTab=(
+          (id: string, _) => self.send(AC_CHANGE_SELECTED_TAB(id))
+        )
+        selectedTab=self.state.selected_tab
+        tabs=[
+          {id: "near", text: "Near By Shops"},
+          {id: "preferred", text: "My Preferred Shops"}
+        ]
+      />
+      (
+        switch self.state.data {
+        | LOADING_LOCATION =>
+          <p> (ReasonReact.string("getting your location")) </p>
+        | LOADING_SHOPS => <p> (ReasonReact.string("loading shops")) </p>
+        | SHOPS_LOADED(shops) =>
+          switch self.state.selected_tab {
+          | "near" =>
+            <div className="shops-wrapper">
+              <ShopsList data=shops.near />
+            </div>
+          | "preferred" =>
+            <div className="shops-wrapper">
+              <ShopsList data=shops.preferred />
+            </div>
+          | _ => <div> (ReasonReact.string("not a valid tab")) </div>
+          }
+        | LOADING_SHOPS_FAILED =>
+          <div> (ReasonReact.string("failed to load shops")) </div>
+        | _ => <div> (ReasonReact.string("else")) </div>
+        }
+      )
+    </div>
 };

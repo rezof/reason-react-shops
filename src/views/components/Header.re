@@ -4,7 +4,7 @@ open Types;
 
 let component = ReasonReact.statelessComponent("Header");
 
-let make = (~tabs: list(tab), ~selectedTab, _children) => {
+let make = (~tabs: list(tab), ~selectedTab, ~changeSelectedTab, _children) => {
   ...component,
   render: _self =>
     <div className="header">
@@ -14,7 +14,9 @@ let make = (~tabs: list(tab), ~selectedTab, _children) => {
           |> Array.of_list
           |> Array.map(tab => {
                let selected = tab.id === selectedTab ? "selected" : "";
-               <span className=("menu-item " ++ selected)>
+               <span
+                 onClick=(changeSelectedTab(tab.id))
+                 className=("menu-item " ++ selected)>
                  (ReasonReact.string(tab.text))
                </span>;
              })
