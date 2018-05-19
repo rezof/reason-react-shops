@@ -15,7 +15,7 @@ let make = (~tabs: list(tab), ~selectedTab, ~changeSelectedTab, _children) => {
           |> Array.map(tab => {
                let selected = tab.id === selectedTab ? "selected" : "";
                let clickHandler =
-                 tab.id !== selected ? changeSelectedTab(tab.id) : (_ => ());
+                 tab.id !== selected ? changeSelectedTab(tab.id) : (_e => ());
                <span onClick=clickHandler className=("menu-item " ++ selected)>
                  (ReasonReact.string(tab.text))
                </span>;
