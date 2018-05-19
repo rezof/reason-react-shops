@@ -7,10 +7,15 @@ type shops = {
   preferred: list(shop)
 };
 
-type resp = {shops};
+type shops_resp = {shops};
+
+type shop_action = {
+  success: bool,
+  error: option(list(string))
+};
 
 module Decoder = {
-  let shops = json : resp =>
+  let shops = json : shops_resp =>
     Json.Decode.{
       shops:
         json
@@ -43,6 +48,11 @@ module Decoder = {
              }
            )
     };
+  let shop_action = json =>
+    Json.Decode.{
+      success: json |> field("success", bool),
+      error: json |> optional(field("error", list(string)))
+    };
 };
 
 type data =
@@ -67,7 +77,10 @@ type action =
   | AC_LOADING_SHOPS
   | AC_LOADING_SHOPS_FAILED
   | AC_SHOPS_LOADED(shops)
-  | AC_CHANGE_SELECTED_TAB(string);
+  | AC_CHANGE_SELECTED_TAB(string)
+  | AC_SHOP_LIKED(string)
+  | AC_SHOP_DISLIKED(string)
+  | AC_SHOP_UNLIKED(string);
 
 let component = ReasonReact.reducerComponent("Home");
 
@@ -94,6 +107,63 @@ let fetch_shops = (~longitude, ~latitude) =>
       ()
     )
   );
+
+let shop_action = (url: string) =>
+  Fetch.fetchWithInit(
+    url,
+    Fetch.RequestInit.make(
+      ~method_=Post,
+      ~headers=
+        Fetch.HeadersInit.make({
+          "Accept": "application/json",
+          "Authorization": getToken()
+        }),
+      ()
+    )
+  );
+
+let clickHandler = (send, shop_id, btn_id) => {
+  switch btn_id {
+  | "like" =>
+    Js.Promise.(
+      shop_action("http://localhost:4000/api/shop/like/" ++ shop_id)
+      |> then_(Fetch.Response.json)
+      |> then_(resp => {
+           let r = resp |> Decoder.shop_action;
+           r.success ? send(AC_SHOP_LIKED(shop_id)) : ();
+           resolve();
+         })
+      |> ignore
+    );
+    ();
+  | "dislike" =>
+    Js.Promise.(
+      shop_action("http://localhost:4000/api/shop/dislike/" ++ shop_id)
+      |> then_(Fetch.Response.json)
+      |> then_(resp => {
+           let r = resp |> Decoder.shop_action;
+           r.success ? send(AC_SHOP_DISLIKED(shop_id)) : ();
+           resolve();
+         })
+      |> ignore
+    );
+    ();
+  | "remove" =>
+    Js.Promise.(
+      shop_action("http://localhost:4000/api/shop/unlike/" ++ shop_id)
+      |> then_(Fetch.Response.json)
+      |> then_(resp => {
+           let r = resp |> Decoder.shop_action;
+           r.success ? send(AC_SHOP_UNLIKED(shop_id)) : ();
+           resolve();
+         })
+      |> ignore
+    );
+    ();
+  | _ => ()
+  };
+  ();
+};
 
 let make = _children => {
   ...component,
@@ -129,6 +199,17 @@ let make = _children => {
       ReasonReact.Update({...state, data: LOADING_SHOPS_FAILED})
     | AC_CHANGE_SELECTED_TAB(selected_tab) =>
       ReasonReact.Update({...state, selected_tab})
+    | AC_SHOP_LIKED(shop_id) =>
+      switch state.data {
+      | SHOPS_LOADED(shops) =>
+        let liked =
+          shops.near |> List.find((shop: shop) => shop.id == shop_id);
+        let near =
+          shops.near |> List.filter((shop: shop) => shop.id != shop_id);
+        let preferred = shops.preferred |> List.append([liked]);
+        ReasonReact.Update({...state, data: SHOPS_LOADED({near, preferred})});
+      | _ => ReasonReact.NoUpdate
+      }
     | _ => ReasonReact.NoUpdate
     },
   didMount: self => {
@@ -171,11 +252,25 @@ let make = _children => {
           switch self.state.selected_tab {
           | "near" =>
             <div className="shops-wrapper">
-              <ShopsList data=shops.near />
+              <ShopsList
+                data=shops.near
+                btns=["dislike", "like"]
+                clickHandler=(
+                  (shop_id, btn_id, _) =>
+                    clickHandler(self.send, shop_id, btn_id)
+                )
+              />
             </div>
           | "preferred" =>
             <div className="shops-wrapper">
-              <ShopsList data=shops.preferred />
+              <ShopsList
+                data=shops.preferred
+                btns=["remove"]
+                clickHandler=(
+                  (shop_id, btn_id, _) =>
+                    clickHandler(self.send, shop_id, btn_id)
+                )
+              />
             </div>
           | _ => <div> (ReasonReact.string("not a valid tab")) </div>
           }
