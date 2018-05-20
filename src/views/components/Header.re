@@ -1,4 +1,4 @@
-[%bs.raw "require('./header.css')"];
+[%bs.raw "require('../../styles/header.css')"];
 
 open Types;
 
@@ -12,11 +12,14 @@ let make = (~tabs: list(tab), ~selectedTab, ~changeSelectedTab, _children) => {
         (
           tabs
           |> Array.of_list
-          |> Array.map(tab => {
+          |> Array.mapi((i, tab) => {
                let selected = tab.id === selectedTab ? "selected" : "";
                let clickHandler =
                  tab.id !== selected ? changeSelectedTab(tab.id) : (_e => ());
-               <span onClick=clickHandler className=("menu-item " ++ selected)>
+               <span
+                 key=(string_of_int(i))
+                 onClick=clickHandler
+                 className=("menu-item " ++ selected)>
                  (ReasonReact.string(tab.text))
                </span>;
              })
