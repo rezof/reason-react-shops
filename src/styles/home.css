@@ -32,14 +32,15 @@
   cursor: pointer;
 }
 
-.shop-wrapper .btns-wrapper .shop-btn:first-of-type {
-  margin-right: 15px;
+.shop-wrapper .btns-wrapper .shop-btn:last-of-type {
+  margin-left: 15px;
 }
 
 .shop-wrapper .shop-btn.like-btn {
   background-color: #2ecc71;
 }
 
-.shop-wrapper .shop-btn.dislike-btn {
+.shop-wrapper .shop-btn.dislike-btn,
+.shop-wrapper .shop-btn.remove-btn {
   background-color: #e74c3c;
 }
