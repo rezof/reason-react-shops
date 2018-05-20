@@ -210,6 +210,25 @@ let make = _children => {
         ReasonReact.Update({...state, data: SHOPS_LOADED({near, preferred})});
       | _ => ReasonReact.NoUpdate
       }
+    | AC_SHOP_DISLIKED(shop_id) =>
+      switch state.data {
+      | SHOPS_LOADED(shops) =>
+        let near =
+          shops.near |> List.filter((shop: shop) => shop.id != shop_id);
+        ReasonReact.Update({...state, data: SHOPS_LOADED({...shops, near})});
+      | _ => ReasonReact.NoUpdate
+      }
+    | AC_SHOP_UNLIKED(shop_id) =>
+      switch state.data {
+      | SHOPS_LOADED(shops) =>
+        let unliked =
+          shops.preferred |> List.find((shop: shop) => shop.id == shop_id);
+        let preferred =
+          shops.preferred |> List.filter((shop: shop) => shop.id != shop_id);
+        let near = shops.near |> List.append([unliked]);
+        ReasonReact.Update({...state, data: SHOPS_LOADED({near, preferred})});
+      | _ => ReasonReact.NoUpdate
+      }
     | _ => ReasonReact.NoUpdate
     },
   didMount: self => {
