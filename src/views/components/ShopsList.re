@@ -17,6 +17,7 @@ let make = (~data, ~btns, ~clickHandler, _children) => {
                |> Array.of_list
                |> Array.map(btn =>
                     <button
+                      key=btn
                       className=("shop-btn " ++ btn ++ "-btn")
                       onClick=(clickHandler(shop.id, btn))>
                       (btn |> String.capitalize |> ReasonReact.string)
